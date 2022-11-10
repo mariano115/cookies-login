@@ -13,25 +13,21 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 
 const MongoStore = require("connect-mongo");
-const advancedOptions = { useNewUrlParser: true, useUnifiedTopology: true };
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
-app.use(cookieParser());
+app.use(cookieParser("secreto"));
 app.use(
   session({
     store: MongoStore.create({
       mongoUrl: Config.urlMongo,
-      mongoOptions: advancedOptions,
+      mongoOptions: { useNewUrlParser: true, useUnifiedTopology: true },
     }),
     secret: "secreto",
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      // Session expires after 1 min of inactivity.
-      expires: 60000,
-    },
+    cookie: { maxAge: 60000 },
   })
 );
 
@@ -66,20 +62,20 @@ io.on("connection", async (socket) => {
     });
     io.sockets.emit("messages", await getMensajes());
   });
-  socket.on("login", async (nombre) => {});
+
+  socket.on("new-product", async (data) => {
+    const products = await fakerProducts(5)
+    products.push(data)
+    io.sockets.emit("products", products);
+  });
 });
 
 app.set("views", "./views");
 app.set("view engine", "ejs");
 
 app.get("/", (req, res) => {
-  console.log("------------ req.session -------------");
-  console.log(req.session);
-  console.log("--------------------------------------");
-
-  console.log("----------- req.sessionID ------------");
-  console.log(req.sessionID);
-  console.log("--------------------------------------");
+  req.session.user = req.query.nombre;
+  res.cookie("logged", req.query.nombre, { signed: true, maxAge: 60000 });
   res.render("formulario", { nombre: req.query.nombre });
 });
 
@@ -87,13 +83,29 @@ app.get("/login", (req, res) => {
   res.render("login");
 });
 
+app.get("/logged", (req, res) => {
+  const log = req.signedCookies.logged;
+  const ses = req.session.user;
+
+  if (log && log === ses) {
+    res.cookie("logged", log, { signed: true, maxAge: 60000 });
+    res.status(200).send(true);
+  } else {
+    res.status(500).send(false);
+  }
+});
+
 app.post("/logout", (req, res) => {
-  //borrar session
-  req.session.destroy(async () => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.json({success:'false', error:err})
+    }
+    
+    res.clearCookie('logged')
     res.render("bye", { nombre: req.query.nombre });
   });
-  /* res.render("login"); */
-});
+})
+  
 
 app.get("/test-mensaje", (req, res) => {
   res.send(testNormalizr());
@@ -101,26 +113,6 @@ app.get("/test-mensaje", (req, res) => {
 
 app.get("/productos-test", async (req, res) => {
   res.send(fakerProducts(5));
-});
-
-app.get("/info", (req, res) => {
-  console.log("------------ req.session -------------");
-  console.log(req.session);
-  console.log("--------------------------------------");
-
-  console.log("----------- req.sessionID ------------");
-  console.log(req.sessionID);
-  console.log("--------------------------------------");
-
-  console.log("----------- req.cookies ------------");
-  console.log(req.cookies);
-  console.log("--------------------------------------");
-
-  console.log("---------- req.sessionStore ----------");
-  console.log(req.sessionStore);
-  console.log("--------------------------------------");
-
-  res.send("Send info ok!");
 });
 
 const fakerProducts = () => {
