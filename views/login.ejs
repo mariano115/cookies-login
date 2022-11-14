@@ -7,7 +7,7 @@
     <div>
       <h1 style="color: blue">Login de Usuario</h1>
       <br />
-      <form id="loginFormulario" method="get" action="/">
+      <form id="loginFormulario" method="post" action="/login">
         <div>
           <div>
             <label for="nombre"><b>Ingrese su nombre</b></label>
@@ -17,18 +17,6 @@
         <button id="enviar" type="submit" style="margin-top: 10px; margin-bottom: 40px;">Enviar</button>
       </form>
     </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      let socket = io()
-      /* const loginFormulario = document.getElementById('loginFormulario');
-      loginFormulario.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const nombreLogin = {
-          nombre: document.getElementById("nombre").value
-        };
-        socket.emit("login", nombreLogin);
-      }) */
-    </script>
   </div>
 </body>
 

@@ -86,18 +86,7 @@
 
     <div id="messages"></div>
     <script>
-      /* const authorSchema = new normalizr.schema.Entity(
-        "authors",
-        {},
-        { idAttribute: "email" }
-      );
-      const messageSchema = new normalizr.schema.Entity("message", {
-        author: authorSchema,
-      });
-      const messagesSchema = { messages: [messageSchema] }; */
-
       socket.on("messages", (data) => {
-        renderCompress(/* data, denormalizedArray */);
         renderMessages(data);
       });
 
@@ -116,35 +105,20 @@
         document.getElementById("messages").innerHTML = html;
       }
 
-      function renderCompress() {
-        const porcentaje = 82;
-
-        const html = `
-                <h2 style='color:blue;'>(Compresión: ${porcentaje}%)</h2>
-        `;
-        document.getElementById("compresion").innerHTML = html;
-      }
-
       const formularioChat = document.getElementById("formularioChat");
       formularioChat.addEventListener("submit", (e) => {
         e.preventDefault();
 
-        fetch(`/logged`).then((data) => {
-          if (data.status === 500) {
-            window.location.href = "/login";
-          } else {
-            const mensaje = {
-              email: document.getElementById("email").value,
-              nombre: document.getElementById("nombre").value,
-              apellido: document.getElementById("apellido").value,
-              edad: document.getElementById("edad").value,
-              alias: document.getElementById("alias").value,
-              avatar: document.getElementById("avatar").value,
-              text: document.getElementById("text").value,
-            };
-            socket.emit("new-message", mensaje);
-          }
-        });
+        const mensaje = {
+          email: document.getElementById("email").value,
+          nombre: document.getElementById("nombre").value,
+          apellido: document.getElementById("apellido").value,
+          edad: document.getElementById("edad").value,
+          alias: document.getElementById("alias").value,
+          avatar: document.getElementById("avatar").value,
+          text: document.getElementById("text").value,
+        };
+        socket.emit("new-message", mensaje);
       });
     </script>
   </div>

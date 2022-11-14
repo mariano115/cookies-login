@@ -68,12 +68,6 @@
           document.getElementById("formularioProducto");
         formularioProducto.addEventListener("submit", (e) => {
           e.preventDefault();
-          let logged;
-
-          fetch(`/logged`).then((data) => {
-            if (data.status === 500) {
-              window.location.href = "/login";
-            } else {
               const producto = {
                 nombre: document.getElementById("nombreProd").value,
                 precio: document.getElementById("precio").value,
@@ -81,8 +75,6 @@
               };
               console.log(producto);
               socket.emit("new-product", producto);
-            }
-          });
         });
       </script>
       <div>

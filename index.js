@@ -1,9 +1,9 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { getMensajes, addMensaje } = require("./Mensajes");
+const { fakerProducts, auth } = require("./utils");
 const { Server: HttpServer } = require("http");
 const { Server: IOServer } = require("socket.io");
-const { faker } = require("@faker-js/faker");
 const app = express();
 const httpServer = new HttpServer(app);
 const io = new IOServer(httpServer);
@@ -73,26 +73,20 @@ io.on("connection", async (socket) => {
 app.set("views", "./views");
 app.set("view engine", "ejs");
 
-app.get("/", (req, res) => {
-  req.session.user = req.query.nombre;
-  res.cookie("logged", req.query.nombre, { signed: true, maxAge: 60000 });
-  res.render("formulario", { nombre: req.query.nombre });
+
+app.get("/", auth, (req, res) => {
+  res.redirect("/home")
 });
 
-app.get("/login", (req, res) => {
-  res.render("login");
-});
+app.post('/login', (req, res) => {
+  if (req.body.nombre) {
+		req.session.user = req.body.nombre;
+		res.redirect("/");
+	}
+})
 
-app.get("/logged", (req, res) => {
-  const log = req.signedCookies.logged;
-  const ses = req.session.user;
-
-  if (log && log === ses) {
-    res.cookie("logged", log, { signed: true, maxAge: 60000 });
-    res.status(200).send(true);
-  } else {
-    res.status(500).send(false);
-  }
+app.get("/home", auth, (req, res) => {
+  res.render("formulario", { nombre: req.session.user })  
 });
 
 app.post("/logout", (req, res) => {
@@ -100,8 +94,6 @@ app.post("/logout", (req, res) => {
     if (err) {
       return res.json({success:'false', error:err})
     }
-    
-    res.clearCookie('logged')
     res.render("bye", { nombre: req.query.nombre });
   });
 })
@@ -114,17 +106,5 @@ app.get("/test-mensaje", (req, res) => {
 app.get("/productos-test", async (req, res) => {
   res.send(fakerProducts(5));
 });
-
-const fakerProducts = () => {
-  const products = [];
-  for (let index = 0; index < 5; index++) {
-    products.push({
-      nombre: faker.commerce.product(),
-      precio: faker.commerce.price(),
-      foto: faker.image.imageUrl(),
-    });
-  }
-  return products;
-};
 
 httpServer.listen(PORT, () => console.log("servidor Levantado"));
